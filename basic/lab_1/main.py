@@ -1,9 +1,10 @@
 import re
 from nltk.stem.snowball import SnowballStemmer
 import pymorphy2
+import csv
 
-text = "Привет я Соня))  Я тут. Как дела :p a = b + c Я живу по адресу Ул. Большая д. 5 к. 3 кв. 34. что делать:( a = b*c = (c+d)^2  q +a = b +c  " \
-       " (a:p) +(a+d+c)*2=2a. Мой номер телефона 8921-123-23-23. А номер моей сестры 8(821)-123-23-24"
+text = "Привет я Соня)) Это первая лабораторная работа Я тут. Как дела :p a = b + c Я живу по адресу Ул. Большая д. 5 к. 3 кв. 34. что делать:( a = b*c = (c+d)^2  q +a = b +c  " \
+       " (a:p) +(a+d+c)*2=2a. Мой номер телефона 8921-123-23-23. А номер моей сестры 8(821)-123-23-24. Каждый веб-разработчик знает, что такое текст-«рыба». Текст этот, несмотря на название, не имеет никакого отношения к обитателям водоемов."
 
 text1 = " (a+b) +(a+d+c)*2=2a"
 address_short = r'(ул|д|к|кв)\.'
@@ -97,15 +98,65 @@ def get_lems(tokens_array):
     return res
 
 
+def check_omonims():
+    tokens_array = ['стих', 'косой', 'баню', 'бегу', 'активируем', 'винил', 'вила', 'внушаем', 'воем', 'вой', 'воплю', 'грузило', 'гуще', 'жаркое', 'замер', 'знать', 'морю']
+    morph = pymorphy2.MorphAnalyzer(lang='ru')
+    res = []
+    f = open("morph_omon.txt", "a")
+    for t in tokens_array:
+        hyps = morph.parse(t)
+        token_res = t + ": "
+        for hyp in hyps:
+            token_res += " " + hyp.normal_form + "(" + str(hyp.score) + ")"
+        f.write(token_res + "\n")
+
+    f.close()
+    return res
+
+
+def create_tsv_file(tokens, stems, lems):
+    with open('Nagavkina.tsv', 'wt') as out_file:
+        tsv_writer = csv.writer(out_file, delimiter='\t')
+        tsv_writer.writerow(['token', 'stem', 'lemma'])
+        for i in range(len(tokens)):
+            tsv_writer.writerow([tokens[i], stems[i], lems[i]])
+
+
+def find_omonims_in_lemma_dataset():
+    with open('./word2lemma.dat', 'r') as file:
+        words_info = file.read().split("\n")
+        print(words_info[0])
+        f = open("omonims2.txt", "a")
+        prev_word = ''
+        prev_lem = ''
+        prev_part = ''
+        for word_info in words_info:
+            res = re.split(r'\t', word_info)
+            if len(res) == 4:
+                [word, lem, part, b] = res
+                if prev_word == word and prev_part != part:
+                    f.write(word + ":  " + prev_lem + " " + lem + "\n")
+                prev_lem = lem
+                prev_word = word
+                prev_part = part
+        f.close()
+
 
 if __name__ == '__main__':
-    print(tokenize(text))
     dirty_tokens = tokenize(text)
     tokens = list(filter(lambda x: len(x) > 0, dirty_tokens))
     print(tokens)
     print(len(tokens))
 
     stems = get_stems(tokens)
+    print("Stems: ")
     print(stems)
     lems = get_lems(tokens)
+    print("Lems: ")
     print(lems)
+
+    # check_omonims()
+    # create_tsv_file(tokens, stems, lems)
+    find_omonims_in_lemma_dataset()
+
+
