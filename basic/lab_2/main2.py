@@ -96,7 +96,7 @@ def calc_association_score(trigram, all_trigrams):
                 e[x][y][z] = (n[0][x] * n[1][y] * n[2][z]) / (n_ppp * n_ppp)
                 suma += o[x][y][z] * math.log(o[x][y][z] / (e[x][y][z] + _SMALL) + _SMALL)
 
-    score = 2 * suma
+    score = 3 * suma
 
     # print(trigram, o, e, n, n_ppp)
     return score
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     likelihood = finder_thr.nbest(trigram_measures.likelihood_ratio, 100)
     fl = open("likelihood.txt", "a")
     for res in likelihood:
-        fl.write(res[0] + " " + res[1] + " " + res[2] + " " + "\n")
+        fl.write(str(res[1]) + ": " + res[0][0] + " " + res[0][1] + " " + res[0][2] + " " + "\n")
     fl.close()
 
     mi = finder_thr.nbest(trigram_measures.mi_like, 100)
